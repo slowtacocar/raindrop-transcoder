@@ -41,7 +41,7 @@ pipeline {
         container('docker') {
           sh 'docker login cme-harbor.int.bobbygeorge.dev -u $HARBOR_USR -p $HARBOR_PSW'
           sh 'docker build -t raindrop-transcoder --cache-to type=inline --cache-from type=registry,ref=cme-harbor.int.bobbygeorge.dev/raindrop/raindrop-transcoder:$GIT_BRANCH --cache-from type=registry,ref=cme-harbor.int.bobbygeorge.dev/raindrop/raindrop-transcoder:latest .'
-          sh '! [ "$GIT_BRANCH" = "master" ] || docker tag raindrop-transcoder cme-harbor.int.bobbygeorge.dev/raindrop/raindrop-transcoder:latest'
+          sh '! [ "$GIT_BRANCH" = "main" ] || docker tag raindrop-transcoder cme-harbor.int.bobbygeorge.dev/raindrop/raindrop-transcoder:latest'
           sh 'docker tag raindrop-transcoder cme-harbor.int.bobbygeorge.dev/raindrop/raindrop-transcoder:$GIT_BRANCH'
           sh 'docker tag raindrop-transcoder cme-harbor.int.bobbygeorge.dev/raindrop/raindrop-transcoder:$GIT_COMMIT'
           sh 'docker push -a cme-harbor.int.bobbygeorge.dev/raindrop/raindrop-transcoder'
@@ -52,7 +52,7 @@ pipeline {
     stage('Deploy Preview') {
       when {
         not {
-          branch 'master'
+          branch 'main'
         }
       }
       steps {
@@ -63,7 +63,7 @@ pipeline {
     }
     stage('Deploy Prod') {
       when {
-        branch 'master'
+        branch 'main'
       }
       steps {
         container('kubectl') {

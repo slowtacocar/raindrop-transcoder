@@ -4,7 +4,7 @@ metadata:
   name: $PREFIX-transcoder
   namespace: $NAMESPACE
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: $PREFIX-transcoder
@@ -24,6 +24,15 @@ spec:
       labels:
         app: $PREFIX-transcoder
     spec:
+      serviceAccountName: $NAMESPACE
+      nodeSelector:
+        kubernetes.io/hostname: cme-kube02.int.bobbygeorge.dev
       containers:
         - name: transcoder
           image: cme-harbor.int.bobbygeorge.dev/raindrop/raindrop-transcoder:$TAG
+          command:
+            - sh
+            - -c
+            - |
+              . /vault/secrets/env
+              yarn start

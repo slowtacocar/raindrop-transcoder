@@ -14,7 +14,9 @@ export async function ffmpegToMinio(
       .save(outputFilePath)
       .on("progress", (progress) => {
         console.log(
-          `Encoding ${key}: \t${progress.percent!.toFixed(0).padStart(3)}%`
+          `Encoding ${outputFilePath}: \t${progress
+            .percent!.toFixed(0)
+            .padStart(3)}%`
         );
       })
       .on("end", async () => resolve())

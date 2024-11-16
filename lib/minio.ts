@@ -1,5 +1,6 @@
 import * as minio from "minio";
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; // fix this :(
 export const minioClient = new minio.Client({
   endPoint: process.env.MINIO_ENDPOINT!,
   port: parseInt(process.env.MINIO_PORT!),

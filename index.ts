@@ -1,6 +1,6 @@
 import amqp from "amqplib";
 import { ffmpegToMinio } from "./lib/utils.js";
-import { mkdtemp, rmdir } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import ffmpeg from "fluent-ffmpeg";
@@ -16,13 +16,15 @@ console.log("Waiting for messages");
 channel.consume(
   process.env.AMQP_QUEUE!,
   async (msg) => {
+    let tmpdir: string | null = null;
     if (!msg) return;
-    console.log("Received message");
-    const tmpdir = await mkdtemp(os.tmpdir() + path.sep);
 
     try {
+      console.log("Received message");
+
       const { videoId, originalKey } = JSON.parse(msg.content.toString());
 
+      tmpdir = await mkdtemp(os.tmpdir() + path.sep);
       const originalPath = path.join(tmpdir, originalKey.split("/").pop()!);
       await minioClient.fGetObject(
         process.env.MINIO_BUCKET!,
@@ -52,7 +54,9 @@ channel.consume(
               "-dash",
               "1",
               "-speed",
-              "5",
+              "2",
+              "-row-mt",
+              "1",
             ])
             .fps(30)
             .noAudio()
@@ -72,7 +76,9 @@ channel.consume(
               "-dash",
               "1",
               "-speed",
-              "5",
+              "2",
+              "-row-mt",
+              "1",
             ])
             .fps(30)
             .noAudio()
@@ -92,14 +98,16 @@ channel.consume(
               "-dash",
               "1",
               "-speed",
-              "5",
+              "2",
+              "-row-mt",
+              "1",
             ])
             .fps(30)
             .noAudio()
             .videoBitrate("276k")
             .videoFilter("scale=640:360"),
           tmpdir,
-          `${videoId}/640x630.webm`
+          `${videoId}/640x360.webm`
         ),
       ]);
 
@@ -127,14 +135,16 @@ channel.consume(
             "-f",
             "webm_dash_manifest",
             "-adaptation_sets",
-            "id=0,streams=0,1,2 id=1,streams=3",
+            "id=0,streams=0,1,2 id=1,streams=3 ",
           ]),
         tmpdir,
         `${videoId}/manifest.mpd`
       );
+    } catch (e) {
+      console.error(e);
     } finally {
       channel.ack(msg);
-      await rmdir(tmpdir);
+      if (tmpdir) await rm(tmpdir, { recursive: true });
     }
   },
   { noAck: false }

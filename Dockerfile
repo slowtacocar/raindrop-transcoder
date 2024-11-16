@@ -1,5 +1,8 @@
 FROM node:20.16
 
+RUN apt update
+RUN apt install ffmpeg -y
+
 WORKDIR /opt/transcoder
 
 COPY .yarn .yarn
